@@ -51,9 +51,7 @@ public sealed class GoGetterBoard
 			GoGetterVertex vertex = Graph.GetVertex(connexionIdsList[i]) as GoGetterVertex;
 			for (int j = 0; j < vertex.Edges.Count; j++)
 				for (int k = 0; k < Slots.Count; k++)
-				{
 					if (Slots[k].ContainsVertices(vertex.Id, vertex.Edges[j].Target.Id)) slots.Add(Slots[k]);
-				}
 			if ((slots.Count == 1) && !deadEnds.Contains(vertex.Id)) deadEnds.Add(vertex.Id);
 		}
 		return (deadEnds);
