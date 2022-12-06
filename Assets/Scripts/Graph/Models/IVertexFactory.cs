@@ -1,4 +1,4 @@
-﻿public interface IVertexFactory<T> where T : class, IGraphData
+﻿public interface IVertexFactory<R, T> where R : struct where T : IGraphData
 {
-	IVertex<T> Create(int id);
+	IVertex<R, T> Create(R id);
 }

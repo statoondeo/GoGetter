@@ -1,60 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public abstract class BaseVertex<T> : IVertex<T> where T : IGraphData, new()
+public abstract class BaseVertex<R, T> : IVertex<R, T> where R : struct where T : IGraphData
 {
-	public int Id { get; protected set; }
-	public T Data { get; protected set; }
-	public bool Visited { get; protected set; }
-	public IList<IEdge<T>> Edges { get; protected set; }
-
-	protected bool EverPerformed;
-
-	protected BaseVertex(int id)
+	public R Id { get; protected set; }
+	public IList<IEdge<R, T>> Edges { get; protected set; }
+	protected BaseVertex(R id)
 	{
 		Id = id;
-		Data = new T();
-		Edges = new List<IEdge<T>>();
-		Reset();
+		Edges = new List<IEdge<R, T>>();
 	}
-	public IList<IVertex<T>> Visit(IGraphConstraint<T> constraint)
-	{
-		if (null == constraint) throw new ArgumentNullException(nameof(constraint));
-
-		SortedList<(int, T), IVertex<T>> performedVertices = new();
-		for (int i = 0; i < Edges.Count; i++)
-		{
-			if (Edges[i].Target.Visited) continue;
-			IEdge<T> currentEdge = Edges[i];
-			if (currentEdge.Follow(constraint)) performedVertices.Add((currentEdge.Target.Id, currentEdge.Data), currentEdge.Target);
-		}
-		Visited = true;
-		return (performedVertices.Values);
-	}
-	public IEdge<T> AddEdge(IEdge<T> edge)
+	public IEdge<R, T> AddEdge(IEdge<R, T> edge)
 	{
 		if (null == edge) throw new ArgumentNullException(nameof(edge));
 
-		edge.SetOrigin(this);
 		Edges.Add(edge);
 		return (edge);
 	}
-	public void RemoveEdge(IEdge<T> edge)
+	public void RemoveEdge(IEdge<R, T> edge)
 	{
 		if (Edges.Contains(edge)) Edges.Remove(edge);
-	}
-	public bool PerformEdge(IEdge<T> edge)
-	{
-		if ((null == edge) || (EverPerformed && (Data.CompareTo(edge.Origin.Data.Add(edge.Data)) < 0))) return (false);
-
-		EverPerformed = true;
-		Data = (T)edge.Origin.Data.Add(edge.Data);
-		return (true);
-	}
-	public void Reset()
-	{
-		Data.Reset();
-		Visited = false;
-		EverPerformed = false;
 	}
 }

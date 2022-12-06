@@ -1,63 +1,82 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public abstract class BaseGraph<T> : IGraph<T> where T : class, IGraphData, new()
+public abstract class BaseGraph<R, T> : IGraph<R, T> where R : struct where T : IGraphData
 {
-	protected IDictionary<int, IVertex<T>> Vertices;
-	protected IVertexFactory<T> VertexFactory;
-	protected IEdgeFactory<T> EdgeFactory;
-
-	protected BaseGraph(IVertexFactory<T> vertexFactory, IEdgeFactory<T> edgeFactory)
+	protected IDictionary<R, IVertex<R, T>> Vertices;
+	protected IVertexFactory<R, T> VertexFactory;
+	protected IVertexDecoratorFactory<R, T> VertexDecoratorFactory;
+	protected IEdgeFactory<R, T> EdgeFactory;
+	protected IGraphConstraint<T> DefaultConstraint;
+	protected BaseGraph(IVertexFactory<R, T> vertexFactory, IVertexDecoratorFactory<R, T> vertexDecoratorFactory, IEdgeFactory<R, T> edgeFactory, IGraphConstraint<T> defaultConstraint)
 	{
-		Vertices = new Dictionary<int, IVertex<T>>();
 		VertexFactory = vertexFactory ?? throw new ArgumentNullException(nameof(vertexFactory));
+		VertexDecoratorFactory = vertexDecoratorFactory ?? throw new ArgumentNullException(nameof(vertexDecoratorFactory));
 		EdgeFactory = edgeFactory ?? throw new ArgumentNullException(nameof(edgeFactory));
+		DefaultConstraint = defaultConstraint ?? throw new ArgumentNullException(nameof(defaultConstraint));
+		Vertices = new Dictionary<R, IVertex<R, T>>();
 	}
-	public virtual IVertex<T> AddVertex(int id)
+	public virtual IVertex<R, T> AddVertex(R id)
 	{
-		IVertex<T> vertex = VertexFactory.Create(id);
+		IVertex<R, T> vertex = VertexFactory.Create(id);
 		Vertices.Add(id, vertex);
 		return (vertex);
 	}
-	public virtual IVertex<T> GetVertex(int id) => Vertices.ContainsKey(id) ? Vertices[id] : null;
-	public virtual IEdge<T> AddEdge(int idOrigin, int idTarget, T data)
+	public virtual IVertex<R, T> GetVertex(R id) => Vertices.ContainsKey(id) ? Vertices[id] : null;
+	public virtual IEdge<R, T> AddEdge(R idOrigin, R idTarget, T data)
 	{
-		IVertex<T> originVertex = GetVertex(idOrigin) ?? AddVertex(idOrigin);
-		IVertex<T> targetVertex = GetVertex(idTarget) ?? AddVertex(idTarget);
-		return (originVertex.AddEdge(EdgeFactory.Create(targetVertex, data)));
+		IVertex<R, T> originVertex = GetVertex(idOrigin) ?? AddVertex(idOrigin);
+		IVertex<R, T> targetVertex = GetVertex(idTarget) ?? AddVertex(idTarget);
+		return (originVertex.AddEdge(EdgeFactory.Create(originVertex.Id, targetVertex.Id, data)));
 	}
-	public virtual void RemoveEdge(int idOrigin, int idTarget)
+	public virtual void RemoveEdge(R originId, R targetd)
 	{
-		IVertex<T> vertex = GetVertex(idOrigin) ?? throw new ArgumentNullException(nameof(idOrigin));
+		IVertex<R, T> vertex = GetVertex(originId) ?? throw new ArgumentNullException(nameof(originId));
 		for (int i = 0; i < vertex.Edges.Count; i++)
 		{
-			IEdge<T> edge = vertex.Edges[i];
-			if (edge.Target.Id == idTarget) edge.Origin.RemoveEdge(edge);
+			IEdge<R, T> edge = vertex.Edges[i];
+			if (edge.Target.Equals(targetd)) vertex.RemoveEdge(edge);
 		}
 	}
-	public virtual T FindPath(int origin, int target, T failResult, IGraphConstraint<T> constraint)
+	protected virtual void DecorateVertices()
 	{
-		if (null == failResult) throw new ArgumentNullException(nameof(failResult));
-		if (null == constraint) throw new ArgumentNullException(nameof(constraint));
-
-		IVertex<T> originVertex = GetVertex(origin);
-		IVertex<T> targetVertex = GetVertex(target);
-
-		if ((null == originVertex) || (null == targetVertex)) return (failResult);
-
-		foreach (IVertex<T> vertex in Vertices.Values) vertex.Reset();
-
-		HashSet<IVertex<T>> verticesToVisit = new() { originVertex };
+		IList<R> vertexKeysList = new List<R>();
+		foreach (R key in Vertices.Keys) vertexKeysList.Add(key);
+		for (int i = 0; i < vertexKeysList.Count; i++) Vertices[vertexKeysList[i]] = VertexDecoratorFactory.Create(this, Vertices[vertexKeysList[i]]);
+	}
+	protected virtual void UnDecorateVertices()
+	{
+		IList<R> vertexKeysList = new List<R>();
+		foreach (R key in Vertices.Keys) vertexKeysList.Add(key);
+		for (int i = 0; i < vertexKeysList.Count; i++) Vertices[vertexKeysList[i]] = (Vertices[vertexKeysList[i]] as IVertexDecorator<R, T>).InnerVertex;
+	}
+	public virtual IList<R> FindPath(R origin, R target, IGraphConstraint<T> constraint = null)
+	{
+		IGraphConstraint<T> localConstraint = constraint ?? DefaultConstraint;
+		if ((null == GetVertex(origin)) || (null == GetVertex(target))) return (null);
+		DecorateVertices();
+		IVertexDecorator<R, T> currentVertex = null;
+		HashSet<R> verticesToVisit = new() { origin };
 		bool found = false;
 		while (!found && (verticesToVisit.Count > 0))
 		{
-			IVertex<T> currentVertex = null;
-			foreach (IVertex<T> vertex in verticesToVisit)
-				if ((null == currentVertex) || (vertex.Data.CompareTo(currentVertex.Data) < 0)) currentVertex = vertex;
-			verticesToVisit.Remove(currentVertex);
-			verticesToVisit.UnionWith(currentVertex.Visit(constraint));
-			found = currentVertex == targetVertex;
+			currentVertex = null;
+			foreach (R vertexId in verticesToVisit)
+			{
+				IVertexDecorator<R, T> vertex = GetVertex(vertexId) as IVertexDecorator<R, T>;
+				if (null == currentVertex)
+				{
+					currentVertex = vertex;
+					continue;
+				}
+				if (vertex.Data.CompareTo(currentVertex.Data) < 0) currentVertex = vertex;
+			}
+			verticesToVisit.Remove(currentVertex.Id);
+			verticesToVisit.UnionWith(currentVertex.Visit(localConstraint));
+			found = currentVertex.Id.Equals(target);
 		}
-		return (found ? targetVertex.Data : failResult);
+		IList<R> path = found ? currentVertex.Path : null;
+		UnDecorateVertices();
+		return (path);
 	}
 }

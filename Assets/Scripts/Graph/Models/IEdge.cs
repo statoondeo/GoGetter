@@ -1,9 +1,6 @@
-﻿public interface IEdge<T> where T : IGraphData
+﻿public interface IEdge<R, T> where R : struct where T : IGraphData
 {
-	IVertex<T> Origin { get; }
-	IVertex<T> Target { get; }
+	R Origin { get; }
+	R Target { get; }
 	T Data { get; }
-
-	bool Follow(IGraphConstraint<T> constraint);
-	void SetOrigin(IVertex<T> vertex);
 }

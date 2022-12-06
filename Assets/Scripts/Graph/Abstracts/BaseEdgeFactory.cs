@@ -1,4 +1,4 @@
-﻿public abstract class BaseEdgeFactory<T> : IEdgeFactory<T> where T : class, IGraphData, new()
+﻿public abstract class BaseEdgeFactory<R, T> : IEdgeFactory<R, T> where R : struct where T : IGraphData
 {
-	public abstract IEdge<T> Create(IVertex<T> targetVertex, T data);
+	public abstract IEdge<R, T> Create(R originId, R targetId, T data);
 }

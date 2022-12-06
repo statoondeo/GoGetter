@@ -1,14 +1,9 @@
 ﻿using System.Collections.Generic;
 
-public interface IVertex<T> where T : IGraphData
+public interface IVertex<R, T> where R : struct where T : IGraphData
 {
-	int Id { get; }
-	T Data { get; }
-	IList<IEdge<T>> Edges { get; }
-	bool Visited { get; }
-	void Reset();
-	IEdge<T> AddEdge(IEdge<T> edge);
-	void RemoveEdge(IEdge<T> edges);
-	bool PerformEdge(IEdge<T> edge);
-	IList<IVertex<T>> Visit(IGraphConstraint<T> constraint);
+	R Id { get; }
+	IList<IEdge<R, T>> Edges { get; }
+	IEdge<R, T> AddEdge(IEdge<R, T> edge);
+	void RemoveEdge(IEdge<R, T> edges);
 }

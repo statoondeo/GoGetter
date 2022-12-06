@@ -1,4 +1,4 @@
-﻿public abstract class BaseVertexFactory<T> : IVertexFactory<T> where T : class, IGraphData, new()
+﻿public abstract class BaseVertexFactory<R, T> : IVertexFactory<R, T> where R : struct where T : IGraphData
 {
-	public abstract IVertex<T> Create(int id);
+	public abstract IVertex<R, T> Create(R id);
 }

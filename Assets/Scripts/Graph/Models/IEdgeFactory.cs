@@ -1,4 +1,4 @@
-﻿public interface IEdgeFactory<T> where T : class, IGraphData
+﻿public interface IEdgeFactory<R, T> where R : struct where T : IGraphData
 {
-	IEdge<T> Create(IVertex<T> targetVertex, T data);
+	IEdge<R, T> Create(R originId, R targetId, T data);
 }

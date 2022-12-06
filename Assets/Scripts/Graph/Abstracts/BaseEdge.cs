@@ -1,15 +1,14 @@
 ﻿using System;
 
-public abstract class BaseEdge<T> : IEdge<T> where T : IGraphData
+public abstract class BaseEdge<R, T> : IEdge<R, T> where R : struct where T : IGraphData
 {
-	public IVertex<T> Origin { get; protected set; }
-	public IVertex<T> Target { get; protected set; }
+	public R Origin { get; protected set; }
+	public R Target { get; protected set; }
 	public T Data { get; protected set; }
 
-	protected BaseEdge(IVertex<T> target, T data)	{
-		Target = target ?? throw new ArgumentNullException(nameof(target));
+	protected BaseEdge(R originId, R targetId, T data)	{
 		Data = data ?? throw new ArgumentNullException(nameof(data));
+		Origin = originId;
+		Target = targetId;
 	}
-	public void SetOrigin(IVertex<T> origin) => Origin = origin ?? throw new ArgumentNullException(nameof(origin));
-	public bool Follow(IGraphConstraint<T> constraint) => !constraint.IsConstrainted((T)Data.Add(Origin.Data)) && Target.PerformEdge(this);
 }

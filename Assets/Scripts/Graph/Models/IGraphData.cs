@@ -2,6 +2,5 @@
 
 public interface IGraphData : IComparable<IGraphData>
 {
-	IGraphData Add(params IGraphData[] data);
-	void Reset();
+	IGraphData Add(IGraphData data);
 }
