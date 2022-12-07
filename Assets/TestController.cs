@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class TestController : MonoBehaviour
 {
-    protected GoGetterBoard Game;
-	protected void Awake() => Game = new GoGetterBoard();
+    protected GoGetterBoard Board;
+	protected void Awake() => Board = new GoGetterBoard();
 	protected void Start()
 	{
-		for (int i = 0; i < Game.Slots.Count; i++) Game.FillSlot(i, i);
+		for (int i = 0; i < Board.Slots.Count; i++) Board.FillSlot(i, i);
 
 		// Check des requirements
 		StringBuilder results = new();
@@ -16,13 +16,13 @@ public class TestController : MonoBehaviour
 		for (int i = 0; i < itemIds.Count - 1; i++)
 			for (int j = i + 1; j < itemIds.Count; j++)
 			{
-				IList<int> path = Game.CheckRequirement(itemIds[i], itemIds[j]);
+				IList<int> path = Board.CheckRequirement(itemIds[i], itemIds[j]);
 				if (null != path)  results.AppendLine($"Path({itemIds[i]}, {itemIds[j]})={ListToString(path)}");
 			}
 		Debug.Log(results.ToString());
 
 		// Check des impasses
-		Debug.Log($"DeadEnd={ListToString(Game.CheckPathes())}");
+		Debug.Log($"DeadEnd={ListToString(Board.CheckPathes())}");
 	}
 	protected string ListToString(IList<int> path)
 	{

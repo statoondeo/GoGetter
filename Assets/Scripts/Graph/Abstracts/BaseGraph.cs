@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 public abstract class BaseGraph<R, T> : IGraph<R, T> where R : struct where T : IGraphData
 {
-	protected IDictionary<R, IVertex<R, T>> Vertices;
-	protected IVertexFactory<R, T> VertexFactory;
-	protected IVertexDecoratorFactory<R, T> VertexDecoratorFactory;
-	protected IEdgeFactory<R, T> EdgeFactory;
-	protected IGraphConstraint<T> DefaultConstraint;
+	protected readonly IDictionary<R, IVertex<R, T>> Vertices;
+	protected readonly IVertexFactory<R, T> VertexFactory;
+	protected readonly IVertexDecoratorFactory<R, T> VertexDecoratorFactory;
+	protected readonly IEdgeFactory<R, T> EdgeFactory;
+	protected readonly IGraphConstraint<T> DefaultConstraint;
 	protected BaseGraph(IVertexFactory<R, T> vertexFactory, IVertexDecoratorFactory<R, T> vertexDecoratorFactory, IEdgeFactory<R, T> edgeFactory, IGraphConstraint<T> defaultConstraint)
 	{
 		VertexFactory = vertexFactory ?? throw new ArgumentNullException(nameof(vertexFactory));
@@ -23,19 +23,19 @@ public abstract class BaseGraph<R, T> : IGraph<R, T> where R : struct where T : 
 		return (vertex);
 	}
 	public virtual IVertex<R, T> GetVertex(R id) => Vertices.ContainsKey(id) ? Vertices[id] : null;
-	public virtual IEdge<R, T> AddEdge(R idOrigin, R idTarget, T data)
+	public virtual IEdge<R, T> AddEdge(R originId, R targetId, T data)
 	{
-		IVertex<R, T> originVertex = GetVertex(idOrigin) ?? AddVertex(idOrigin);
-		IVertex<R, T> targetVertex = GetVertex(idTarget) ?? AddVertex(idTarget);
+		IVertex<R, T> originVertex = GetVertex(originId) ?? AddVertex(originId);
+		IVertex<R, T> targetVertex = GetVertex(targetId) ?? AddVertex(targetId);
 		return (originVertex.AddEdge(EdgeFactory.Create(originVertex.Id, targetVertex.Id, data)));
 	}
-	public virtual void RemoveEdge(R originId, R targetd)
+	public virtual void RemoveEdge(R originId, R targetId)
 	{
 		IVertex<R, T> vertex = GetVertex(originId) ?? throw new ArgumentNullException(nameof(originId));
 		for (int i = 0; i < vertex.Edges.Count; i++)
 		{
 			IEdge<R, T> edge = vertex.Edges[i];
-			if (edge.Target.Equals(targetd)) vertex.RemoveEdge(edge);
+			if (edge.Target.Equals(targetId)) vertex.RemoveEdge(edge);
 		}
 	}
 	protected virtual void DecorateVertices()
@@ -64,12 +64,7 @@ public abstract class BaseGraph<R, T> : IGraph<R, T> where R : struct where T : 
 			foreach (R vertexId in verticesToVisit)
 			{
 				IVertexDecorator<R, T> vertex = GetVertex(vertexId) as IVertexDecorator<R, T>;
-				if (null == currentVertex)
-				{
-					currentVertex = vertex;
-					continue;
-				}
-				if (vertex.Data.CompareTo(currentVertex.Data) < 0) currentVertex = vertex;
+				if ((null == currentVertex) || (vertex.Data.CompareTo(currentVertex.Data) < 0)) currentVertex = vertex;
 			}
 			verticesToVisit.Remove(currentVertex.Id);
 			verticesToVisit.UnionWith(currentVertex.Visit(localConstraint));
