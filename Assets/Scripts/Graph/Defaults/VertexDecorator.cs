@@ -1,4 +1,4 @@
-﻿public sealed class VertexDecorator : BaseVertexDecorator<int, GraphData>
+﻿public class VertexDecorator : BaseVertexDecorator<int, GraphData>
 {
-	public VertexDecorator(IGraph<int, GraphData> graph, IVertex<int, GraphData> innerVertex) : base(graph, innerVertex) { }
+	public VertexDecorator() : base() { }
 }

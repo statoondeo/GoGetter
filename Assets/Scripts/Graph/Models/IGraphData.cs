@@ -3,4 +3,5 @@
 public interface IGraphData : IComparable<IGraphData>
 {
 	IGraphData Add(IGraphData data);
+	void Clear();
 }

@@ -1,4 +1,5 @@
-﻿public interface IVertexDecoratorFactory<R, T> where R : struct where T : IGraphData
+﻿using System;
+
+public interface IVertexDecoratorFactory<R, T> : IPoolableFactory where R : struct, IComparable where T : IGraphData
 {
-	IVertexDecorator<R, T> Create(IGraph<R, T> graph, IVertex<R, T> innerVertex);
 }

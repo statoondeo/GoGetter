@@ -1,4 +1,4 @@
-﻿public sealed class VertexFactory : BaseVertexFactory<int, GraphData>
+﻿public class VertexFactory : BaseVertexFactory<int, GraphData>
 {
 	public override IVertex<int, GraphData> Create(int id) => new Vertex(id);
 }

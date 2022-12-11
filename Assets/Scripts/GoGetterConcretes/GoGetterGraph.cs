@@ -1,7 +1,8 @@
 ﻿public sealed class GoGetterGraph : Graph
 {
-	public GoGetterGraph() : base()
+	private const int MAX_EDGE = 24;
+	public GoGetterGraph() : base(MAX_EDGE)
 	{
-		for (int i = 0; i < 24; i++) AddVertex(i + 1);
+		for (int i = 0; i < MAX_EDGE; i++) AddVertex(i + 1);
 	}
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 /// <summary>
 /// Classe décrivant un slot du plateau de jeu, c'est à dire les noeuds concernés par ce slot
@@ -25,14 +24,12 @@ public sealed class GoGetterSlot
 	/// <param name="key"></param>
 	/// <returns>Id du noeud</returns>
 	public int GetVertexId(int key) => Vertices[key];
-	public bool ContainsVertices(int index1, int index2) => Vertices.Values.Contains(index1) && Vertices.Values.Contains(index2);
 
-	public override string ToString()
-	{
-		StringBuilder sb = new();
-		sb.AppendLine($"Tuile=>");
-		IEnumerator<int> enumerator = Vertices.Values.GetEnumerator();
-		while(enumerator.MoveNext()) sb.Append($"{enumerator.Current}");
-		return (sb.ToString());
-	}
+	/// <summary>
+	/// Est-ce que le slot contient les vertices demandés
+	/// </summary>
+	/// <param name="index1"></param>
+	/// <param name="index2"></param>
+	/// <returns>true si les 2 vertices sont dans le slot, false sinon</returns>
+	public bool ContainsVertices(int index1, int index2) => Vertices.Values.Contains(index1) && Vertices.Values.Contains(index2);
 }

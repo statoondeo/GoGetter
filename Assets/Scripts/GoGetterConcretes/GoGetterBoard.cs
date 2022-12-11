@@ -8,11 +8,12 @@ public sealed class GoGetterBoard
 	/// <summary>
 	/// Liste des emplacement du plateau de jeu
 	/// </summary>
-	public IList<GoGetterSlot> Slots { get; private set; }
+	public IList<GoGetterSlot> Slots { get; }
+
 	/// <summary>
 	/// Liste des tuiles à utiliser
 	/// </summary>
-	public IList<GoGetterTile> Tiles { get; private set; }
+	public IList<GoGetterTile> Tiles { get; }
 
 	private readonly Graph Graph;
 	private readonly IDictionary<int, int> SlotTileBindings;
@@ -24,39 +25,43 @@ public sealed class GoGetterBoard
 		Tiles = GoGetterData.GetTiles();
 		SlotTileBindings = new Dictionary<int, int>();
 	}
+
 	/// <summary>
 	/// Contrôle que chaque slot contient une tuile
 	/// </summary>
 	/// <returns>true si le plateau de jeu est complet, false sinon</returns>
 	public bool CheckBoard() => SlotTileBindings.Count == Slots.Count;
+
 	/// <summary>
 	/// Contrôle qu'aucun chemin n'est interrompu.
 	/// Un chemin interrompu est un chemin qui ne mène pas à un item ou une tuile voisine.
 	/// </summary>
 	/// <returns>true si aucun chemin n'est interrompu, alse sinon</returns>
-	public IList<int> CheckPathes()
+	public ISet<int> CheckPathes()
 	{
-		IList<int> deadEnds = new List<int>();
+		ISet<int> deadEnds = new HashSet<int>();
 		IList<int> connexionIdsList = GoGetterData.GetConnexionsIds();
 
 		for (int i = 0; i < connexionIdsList.Count; i++)
 		{
-			HashSet<GoGetterSlot> slots = new();
+			ISet<GoGetterSlot> slots = new HashSet<GoGetterSlot>();
 			Vertex vertex = Graph.GetVertex(connexionIdsList[i]) as Vertex;
-			for (int j = 0; j < vertex.Edges.Count; j++)
-				for (int k = 0; k < Slots.Count; k++)
-					if (Slots[k].ContainsVertices(vertex.Id, vertex.Edges[j].Target)) slots.Add(Slots[k]);
-			if ((slots.Count == 1) && !deadEnds.Contains(vertex.Id)) deadEnds.Add(vertex.Id);
+			foreach (Edge edge in vertex.Edges)
+				for (int k = 0; k < Slots.Count; k++) 
+					if (Slots[k].ContainsVertices(vertex.Id, edge.Target)) slots.Add(Slots[k]);
+			if (slots.Count == 1) deadEnds.Add(vertex.Id);
 		}
 		return (deadEnds);
 	}
+
 	/// <summary>
 	/// Contrôle si il existe un chemin entre 2 items
 	/// </summary>
 	/// <param name="origin">Id de l'item d'origine</param>
 	/// <param name="target">Id de l'item destination</param>
 	/// <returns>true si il y a un chemin entre l'origine et la destination, false sinon</returns>
-	public IList<int> CheckRequirement(int origin, int target) => Graph.FindPath(origin, target);
+	public ISet<int> CheckRequirement(int origin, int target) => Graph.FindPath(origin, target);
+
 	/// <summary>
 	/// Associe une tuile à un slot sur la plateau de jeu
 	/// </summary>
@@ -67,12 +72,13 @@ public sealed class GoGetterBoard
 		GoGetterTile tile = Tiles[tileIndex];
 		for (int i = 0; i < tile.EdgeCount; i++)
 		{
-			(int, int) edge = tile.GetEdge(i);
+			(int origin, int target) = tile.GetEdge(i);
 			GoGetterSlot slot = Slots[slotIndex];
-			Graph.AddEdge(slot.GetVertexId(edge.Item1), slot.GetVertexId(edge.Item2), new GraphData(1));
+			Graph.AddEdge(slot.GetVertexId(origin), slot.GetVertexId(target), new GraphData(1));
 		}
 		SlotTileBindings.Add(slotIndex, tileIndex);
 	}
+
 	/// <summary>
 	/// Vide le slot demandé
 	/// </summary>
