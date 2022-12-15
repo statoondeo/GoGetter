@@ -67,7 +67,7 @@ public sealed class GoGetterBoard
 	/// </summary>
 	/// <param name="slotIndex">index du slot</param>
 	/// <param name="tileIndex">index de la tuile</param>
-	public void FillSlot(int slotIndex, int tileIndex)
+	private void FillSlot(int slotIndex, int tileIndex)
 	{
 		GoGetterTile tile = Tiles[tileIndex];
 		for (int i = 0; i < tile.EdgeCount; i++)
@@ -83,7 +83,7 @@ public sealed class GoGetterBoard
 	/// Vide le slot demandé
 	/// </summary>
 	/// <param name="slotIndex">index du slot</param>
-	public void EmptySlot(int slotIndex)
+	private void EmptySlot(int slotIndex)
 	{
 		if (!SlotTileBindings.ContainsForwardKey(slotIndex)) return;
 		GoGetterSlot slot = Slots[slotIndex];
@@ -93,6 +93,38 @@ public sealed class GoGetterBoard
 		{
 			(int, int) edge = tile.GetEdge(i);
 			Graph.RemoveEdge(slot.GetVertexId(edge.Item1), slot.GetVertexId(edge.Item2));
+		}
+	}
+
+	public void SwitchTiles(int slotIndex, int tileIndex, int newSlotIndex, int newTileIndex)
+	{
+		if (tileIndex == -1)
+		{
+			if (newSlotIndex == -1)
+			{
+				EmptySlot(slotIndex);
+				FillSlot(slotIndex, newTileIndex);
+			}
+			else
+			{
+				EmptySlot(newSlotIndex);
+				FillSlot(slotIndex, newTileIndex);
+			}
+		}
+		else
+		{
+			if (newSlotIndex == -1)
+			{
+				EmptySlot(slotIndex);
+				FillSlot(slotIndex, newTileIndex);
+			}
+			else
+			{
+				EmptySlot(slotIndex);
+				EmptySlot(newSlotIndex);
+				FillSlot(slotIndex, newTileIndex);
+				FillSlot(newSlotIndex, tileIndex);
+			}
 		}
 	}
 

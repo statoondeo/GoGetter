@@ -12,8 +12,6 @@ public class Droppable : MonoBehaviour, IDropHandler
 
 	public Vector2 Position => RectTransform.anchoredPosition;
 
-	#region IDropHandler
-
 	public void OnDrop(PointerEventData eventData)
 	{
 		if (eventData.pointerDrag is null) return;
@@ -22,44 +20,9 @@ public class Droppable : MonoBehaviour, IDropHandler
 		if (!draggable.IsDragging) return;
 
 		draggable.Dropped();
-
-		int tileIndex = Board.GetSlotTile(SlotIndex);
-		int slotIndex = SlotIndex;
-		int newTileIndex = draggable.TileIndex;
-		int newSlotIndex = Board.GetTileSlot(draggable.TileIndex);
-
-		if (tileIndex == -1)
-		{
-			if (newSlotIndex == -1)
-			{
-				Board.EmptySlot(slotIndex);
-				Board.FillSlot(slotIndex, newTileIndex);
-			}
-			else
-			{
-				Board.EmptySlot(newSlotIndex);
-				Board.FillSlot(slotIndex, newTileIndex);
-			}
-		}
-		else
-		{
-			if (newSlotIndex == -1)
-			{
-				Board.EmptySlot(slotIndex);
-				Board.FillSlot(slotIndex, newTileIndex);
-			}
-			else
-			{
-				Board.EmptySlot(slotIndex);
-				Board.EmptySlot(newSlotIndex);
-				Board.FillSlot(slotIndex, newTileIndex);
-				Board.FillSlot(newSlotIndex, tileIndex);
-			}
-		}
+		Board.SwitchTiles(SlotIndex, Board.GetSlotTile(SlotIndex), Board.GetTileSlot(draggable.TileIndex), draggable.TileIndex);
 		GameManager.Instance.EventsManager.Raise(Events.OnDropped);
 	}
-
-	#endregion
 
 	protected void Awake()
 	{

@@ -13,10 +13,11 @@ public abstract class Singleton<T> : MonoBehaviour where T : Component
 			instance = FindObjectOfType<T>();
 			if (instance != null) return (instance);
 
-			GameObject obj = new GameObject();
-			obj.name = typeof(T).Name;
-			obj.hideFlags = HideFlags.DontSave;
-			instance = obj.AddComponent<T>();
+			instance = new GameObject
+			{
+				name = typeof(T).Name,
+				hideFlags = HideFlags.DontSave
+			}.AddComponent<T>();
 
 			return instance;
 		}
