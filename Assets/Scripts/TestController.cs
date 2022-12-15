@@ -1,44 +1,47 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 public class TestController : MonoBehaviour
 {
-	[SerializeField] protected ScriptableTestGrid TestGrid;
+	[SerializeField] protected Droppable[] Droppables;
+	[SerializeField] protected Draggable[] Draggables;
 
-    protected GoGetterBoard Board;
+	public GoGetterBoard Board;
+
 	protected void Awake() => Board = new GoGetterBoard();
-	protected void Start()
+
+	protected void OnEnable()
 	{
-		if (null == TestGrid) throw new ArgumentNullException(nameof(TestGrid));
-
-		// Consitution de la grille
-		for (int i = 0; i < TestGrid.TilesPositionAndRotation.Length; i++)
-		{
-			int tileIndex = TestGrid.TilesPositionAndRotation[i].x;
-			for (int j = 0; j < TestGrid.TilesPositionAndRotation[i].y; j++) Board.Tiles[tileIndex].Rotate();
-			Board.FillSlot(i, tileIndex);
-		}
-
-		// Check des impasses
-		Debug.Log($"DeadEnd={ListToString(Board.CheckPathes())}");
-
-		// Check des requirements
-		StringBuilder results = new();
-		IList<int> itemIds = GoGetterData.GetItemIds();
-		for (int i = 0; i < itemIds.Count - 1; i++)
-			for (int j = i + 1; j < itemIds.Count; j++)
-			{
-				ISet<int> path = Board.CheckRequirement(itemIds[i], itemIds[j]);
-				if (null != path)  results.AppendLine($"Path({itemIds[i]}, {itemIds[j]})={ListToString(path)}");
-			}
-		Debug.Log(results.ToString());
+		GameManager.Instance.EventsManager.Register(Events.OnDragBegin, OnBeginDragCallback);
+		GameManager.Instance.EventsManager.Register(Events.OnDropped, OnDroppedCallback);
+		GameManager.Instance.EventsManager.Register(Events.OnDragEnd, OnEndDragCallback);
 	}
-	protected static string ListToString(ISet<int> path)
+	protected void OnDisable()
 	{
-		StringBuilder sb = new();
-		foreach(int vertexId in path) sb.Append($"\t {vertexId}");
-		return (sb.ToString());
+		GameManager.Instance.EventsManager.UnRegister(Events.OnDragBegin, OnBeginDragCallback);
+		GameManager.Instance.EventsManager.UnRegister(Events.OnDropped, OnDroppedCallback);
+		GameManager.Instance.EventsManager.UnRegister(Events.OnDragEnd, OnEndDragCallback);
+	}
+	protected void OnBeginDragCallback(EventArg arg)
+	{
+		for (int i = 0; i < Draggables.Length; i++)
+		{
+			Draggables[i].DragStarted();
+		}
+	}
+	protected void OnEndDragCallback(EventArg arg)
+	{
+		for (int i = 0; i < Draggables.Length; i++)
+		{
+			Draggables[i].DragEnded();
+		}
+	}
+	protected void OnDroppedCallback(EventArg arg)
+	{
+		for (int i = 0; i < Draggables.Length; i++)
+		{
+			Draggable draggable = Draggables[i];
+			int slotIndex = Board.GetTileSlot(draggable.TileIndex);
+			draggable.MoveTo(Board.GetSlotTile(slotIndex) == -1 ? null : Droppables[slotIndex]);
+		}
 	}
 }

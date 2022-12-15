@@ -16,14 +16,14 @@ public sealed class GoGetterBoard
 	public IList<GoGetterTile> Tiles { get; }
 
 	private readonly Graph Graph;
-	private readonly IDictionary<int, int> SlotTileBindings;
+	private readonly TwoDictionary<int, int> SlotTileBindings;
 
 	public GoGetterBoard()
 	{
 		Graph = new GoGetterGraph();
 		Slots = GoGetterData.GetSlots();
 		Tiles = GoGetterData.GetTiles();
-		SlotTileBindings = new Dictionary<int, int>();
+		SlotTileBindings = new TwoDictionary<int, int>();
 	}
 
 	/// <summary>
@@ -47,7 +47,7 @@ public sealed class GoGetterBoard
 			ISet<GoGetterSlot> slots = new HashSet<GoGetterSlot>();
 			Vertex vertex = Graph.GetVertex(connexionIdsList[i]) as Vertex;
 			foreach (Edge edge in vertex.Edges)
-				for (int k = 0; k < Slots.Count; k++) 
+				for (int k = 0; k < Slots.Count; k++)
 					if (Slots[k].ContainsVertices(vertex.Id, edge.Target)) slots.Add(Slots[k]);
 			if (slots.Count == 1) deadEnds.Add(vertex.Id);
 		}
@@ -85,14 +85,17 @@ public sealed class GoGetterBoard
 	/// <param name="slotIndex">index du slot</param>
 	public void EmptySlot(int slotIndex)
 	{
-		if (!SlotTileBindings.ContainsKey(slotIndex)) return;
+		if (!SlotTileBindings.ContainsForwardKey(slotIndex)) return;
 		GoGetterSlot slot = Slots[slotIndex];
-		GoGetterTile tile = Tiles[SlotTileBindings[slotIndex]];
-		SlotTileBindings.Remove(slotIndex);
+		GoGetterTile tile = Tiles[SlotTileBindings.GetForwardValue(slotIndex)];
+		SlotTileBindings.RemoveForward(slotIndex);
 		for (int i = 0; i < tile.EdgeCount; i++)
 		{
 			(int, int) edge = tile.GetEdge(i);
 			Graph.RemoveEdge(slot.GetVertexId(edge.Item1), slot.GetVertexId(edge.Item2));
 		}
 	}
+
+	public int GetSlotTile(int slotIndex) => SlotTileBindings.ContainsForwardKey(slotIndex) ? SlotTileBindings.GetForwardValue(slotIndex) : -1;
+	public int GetTileSlot(int tileIndex) => SlotTileBindings.ContainsBackwardKey(tileIndex) ? SlotTileBindings.GetBackwardValue(tileIndex) : -1;
 }
